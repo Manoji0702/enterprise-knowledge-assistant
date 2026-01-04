@@ -1,0 +1,10 @@
+Title: Account Locked Issues
+
+Accounts may be locked due to multiple failed login attempts.
+
+Resolution:
+- Verify lock status in Active Directory.
+- Unlock account if appropriate.
+- Advise user to wait before retrying.
+- Identify devices using old credentials.
+- Escalate if account locks repeatedly.

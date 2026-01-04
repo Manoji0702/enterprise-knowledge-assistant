@@ -1,0 +1,12 @@
+Title: Email Delivery Delay
+
+Email delivery delays may occur due to:
+- Large attachments
+- Mail server load
+- Recipient mailbox issues
+
+Actions:
+- Verify mail tracking status.
+- Ask user to resend email if required.
+- Confirm recipient mailbox capacity.
+- Escalate to messaging team if delays persist.
