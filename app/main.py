@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.api.upload import router as upload_router
 
 app = FastAPI(
     title="Enterprise Knowledge Assistant",
@@ -7,8 +8,8 @@ app = FastAPI(
 )
 
 @app.get("/health")
-def health_check():
-    return {
-        "status": "ok",
-        "service": "enterprise-knowledge-assistant"
-    }
+def health():
+    return {"status": "ok"}
+
+# 🔴 THIS LINE IS CRITICAL
+app.include_router(upload_router)
