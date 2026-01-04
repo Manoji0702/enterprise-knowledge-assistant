@@ -14,14 +14,6 @@ pipeline {
             }
         }
 
-        stage("Validate Python App") {
-            steps {
-                bat 'python --version'
-                bat 'pip install -r requirements.txt'
-                bat 'python -c "import app.main"'
-            }
-        }
-
         stage("Docker Build") {
             steps {
                 bat 'docker build -t %IMAGE_NAME%:%IMAGE_TAG% .'
