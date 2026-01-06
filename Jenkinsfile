@@ -2,7 +2,8 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "enterprise-knowledge-assistant"
+        IMAGE_NAME = "manoj0207/enterprise-knowledge-assistant"
+        KUBECONFIG = "D:/Kube_Config/admin.conf"
     }
 
     stages {
@@ -13,35 +14,49 @@ pipeline {
             }
         }
 
-        stage("Docker Build") {
+        stage("Docker Build & Push") {
             steps {
-                bat """
-                docker build -t %IMAGE_NAME%:${env.BUILD_NUMBER} .
-                """
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    bat """
+                    docker login -u %DOCKER_USER% -p %DOCKER_PASS%
+                    docker build -t %IMAGE_NAME%:%BUILD_NUMBER% .
+                    docker push %IMAGE_NAME%:%BUILD_NUMBER%
+                    """
+                }
             }
         }
 
-        stage("Smoke Test (Container)") {
+        stage("Terraform Deploy") {
             steps {
-                bat """
-                docker run -d -p 8000:8000 --name eka-test %IMAGE_NAME%:${env.BUILD_NUMBER}
-                timeout /t 5
-                curl http://127.0.0.1:8000/health
-                docker rm -f eka-test
-                """
+                withCredentials([
+                    string(credentialsId: 'openai-api-key', variable: 'OPENAI_KEY')
+                ]) {
+                    dir('terraform') {
+                        bat """
+                        terraform init -input=false
+                        terraform plan ^
+                          -var="image_name=%IMAGE_NAME%:%BUILD_NUMBER%" ^
+                          -var="openai_api_key=%OPENAI_KEY%"
+                        terraform apply -auto-approve ^
+                          -var="image_name=%IMAGE_NAME%:%BUILD_NUMBER%" ^
+                          -var="openai_api_key=%OPENAI_KEY%"
+                        """
+                    }
+                }
             }
         }
     }
 
     post {
-        always {
-            bat "docker ps -a"
-        }
         success {
-            echo "CI pipeline completed successfully"
+            echo "🚀 Deployment successful"
         }
         failure {
-            echo "CI pipeline failed"
+            echo "❌ Deployment failed"
         }
     }
 }
