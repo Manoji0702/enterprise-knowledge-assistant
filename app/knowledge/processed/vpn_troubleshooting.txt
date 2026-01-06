@@ -1,9 +1,0 @@
-Title: VPN Troubleshooting Guide
-
-If VPN is not connecting, verify internet connectivity.
-After password reset, VPN may fail due to cached credentials.
-Clear saved VPN credentials and reconnect.
-Restart the VPN client service.
-Ensure the VPN client version is updated.
-Verify multi-factor authentication approval.
-Escalate to network support if VPN gateway is unreachable.

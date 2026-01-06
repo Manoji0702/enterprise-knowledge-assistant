@@ -10,7 +10,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app
 
 # 🔴 COPY DOCS BEFORE CMD (THIS WAS MISSING IN EFFECT)
-COPY docs /app/app/knowledge/processed
+COPY docs /app/app/knowledge/seed
 
 EXPOSE 8000
 

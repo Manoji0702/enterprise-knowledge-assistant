@@ -1,8 +1,0 @@
-Title: Laptop Slow Performance
-
-Slow performance may be caused by high CPU or memory usage.
-Check running applications and background processes.
-Restart the system to clear temporary issues.
-Verify available disk space.
-Ensure antivirus scans are not running continuously.
-Recommend hardware upgrade if system resources are insufficient.

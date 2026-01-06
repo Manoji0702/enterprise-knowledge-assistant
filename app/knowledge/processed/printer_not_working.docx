@@ -1,8 +1,0 @@
-Title: Printer Not Working
-
-If printer is not responding:
-- Verify power and network connection.
-- Restart printer and print spooler service.
-- Ensure correct printer driver is installed.
-- Clear stuck print jobs.
-- Reinstall printer if required.
