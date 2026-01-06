@@ -2,19 +2,29 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "manoj0207/enterprise-knowledge-assistant"
-        KUBECONFIG = "D:/Kube_Config/admin.conf"
+        DOCKER_USER = 'manoj0207'
+        IMAGE_NAME  = 'enterprise-knowledge-assistant'
+        IMAGE_TAG   = "${BUILD_NUMBER}"
+        FULL_IMAGE  = "${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
     }
 
     stages {
 
-        stage("Checkout") {
+        stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        stage("Docker Build & Push") {
+        stage('Docker Build') {
+            steps {
+                bat """
+                docker build -t %FULL_IMAGE% .
+                """
+            }
+        }
+
+        stage('Docker Push') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub-creds',
@@ -23,27 +33,24 @@ pipeline {
                 )]) {
                     bat """
                     docker login -u %DOCKER_USER% -p %DOCKER_PASS%
-                    docker build -t %IMAGE_NAME%:%BUILD_NUMBER% .
-                    docker push %IMAGE_NAME%:%BUILD_NUMBER%
+                    docker push %FULL_IMAGE%
                     """
                 }
             }
         }
 
-        stage("Terraform Deploy") {
+        stage('Terraform Deploy') {
             steps {
-                withCredentials([
-                    string(credentialsId: 'openai-api-key', variable: 'OPENAI_KEY')
-                ]) {
+                withCredentials([string(
+                    credentialsId: 'openai-api-key',
+                    variable: 'OPENAI_API_KEY'
+                )]) {
                     dir('terraform') {
                         bat """
                         terraform init -input=false
-                        terraform plan ^
-                          -var="image_name=%IMAGE_NAME%:%BUILD_NUMBER%" ^
-                          -var="openai_api_key=%OPENAI_KEY%"
                         terraform apply -auto-approve ^
-                          -var="image_name=%IMAGE_NAME%:%BUILD_NUMBER%" ^
-                          -var="openai_api_key=%OPENAI_KEY%"
+                          -var="image_name=%FULL_IMAGE%" ^
+                          -var="openai_api_key=%OPENAI_API_KEY%"
                         """
                     }
                 }
@@ -53,10 +60,10 @@ pipeline {
 
     post {
         success {
-            echo "🚀 Deployment successful"
+            echo "✅ CI/CD completed successfully"
         }
         failure {
-            echo "❌ Deployment failed"
+            echo "❌ CI/CD failed"
         }
     }
 }
