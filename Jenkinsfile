@@ -16,15 +16,6 @@ pipeline {
             }
         }
 
-        stage('Sync Knowledge Docs') {
-            steps {
-                bat """
-                f not exist C:\\eka-knowledge\\processed mkdir C:\\eka-knowledge\\processed
-                xcopy /E /Y docs C:\\eka-knowledge\\processed\\
-                """
-            }
-        }
-
         stage('Docker Build') {
             steps {
                 bat """
