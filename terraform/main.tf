@@ -122,7 +122,7 @@ resource "kubernetes_deployment" "eka" {
         container {
           name  = "eka"
           image = var.image_name
-
+          image_pull_policy = "Always"
           port {
             container_port = 8000
           }
