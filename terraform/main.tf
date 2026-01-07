@@ -139,7 +139,7 @@ resource "kubernetes_deployment" "eka" {
 
           volume_mount {
             name       = "vector-store"
-            mount_path = "/app/app/knowledge"
+            mount_path = "/app/app/knowledge/vector_store"
           }
         }
 
