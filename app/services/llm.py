@@ -1,36 +1,24 @@
-import os
 from openai import OpenAI
+import os
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-SYSTEM_PROMPT = """
-You are an internal enterprise knowledge assistant.
-Answer ONLY using the provided context.
-If the answer is not found in the context, say:
-"Information not available in the knowledge base."
-"""
-
-def generate_answer(question: str, context_chunks: list):
-    context_text = "\n\n".join(
-        f"- {chunk['text']}" for chunk in context_chunks
-    )
-
+def generate_answer(question: str, context: str) -> str:
     prompt = f"""
+You are a helpful enterprise IT support assistant.
+
 Context:
-{context_text}
+{context}
 
 Question:
 {question}
 
-Answer:
+Answer clearly and concisely.
 """
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": prompt}
-        ],
+        messages=[{"role": "user", "content": prompt}],
         temperature=0.2
     )
 

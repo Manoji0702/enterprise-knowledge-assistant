@@ -20,15 +20,17 @@ def chat(request: ChatRequest):
                 "sources": []
             }
 
-        answer = generate_answer(request.question, chunks)
+        # ✅ BUILD CONTEXT STRING HERE
+        context = "\n\n".join(c.get("text", "") for c in chunks)
+
+        answer = generate_answer(request.question, context)
 
         return {
             "question": request.question,
             "answer": answer,
-            "sources": list(set(c["source"] for c in chunks))
+            "sources": list(set(c.get("source", "unknown") for c in chunks))
         }
 
     except Exception as e:
-        # 👇 THIS IS THE KEY
         print("❌ Chat error:", str(e))
         raise HTTPException(status_code=500, detail="Chat processing failed")

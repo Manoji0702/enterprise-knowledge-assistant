@@ -56,7 +56,13 @@ def bootstrap_knowledge_base():
 
             chunks = chunk_text(text)
             embeddings = embed_texts(chunks)
-            metadata = [{"source": filename} for _ in chunks]
+            metadata = [
+                {
+                    "source": filename,
+                    "text": chunk
+                }
+                for chunk in chunks
+            ]
 
             store.add(embeddings, metadata)
             print(f"✅ Indexed {filename}")
