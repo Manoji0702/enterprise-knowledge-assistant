@@ -5,3 +5,5 @@ pypdf
 python-docx
 faiss-cpu
 openai
+prometheus-client
+

@@ -1,17 +1,21 @@
-FROM python:3.11-slim
-
+# ---------- builder ----------
+FROM python:3.11-slim AS builder
 WORKDIR /app
 
-# Copy dependency list first (better caching)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential gcc \
+ && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-# Copy application code
+# ---------- runtime ----------
+FROM python:3.11-slim
+WORKDIR /app
+
+COPY --from=builder /install /usr/local
 COPY app ./app
-
-# 🔴 COPY DOCS BEFORE CMD (THIS WAS MISSING IN EFFECT)
-COPY docs /app/app/knowledge/seed
+COPY app/web ./web
 
 EXPOSE 8000
-
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
