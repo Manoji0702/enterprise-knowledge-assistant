@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logs & temp
+*.log
+*.tmp
+*.bak
+
+# Tests & reports
+tests/
+coverage/
+.pytest_cache/
+
+# Environment files
+.env
+.env.*
+
+# Node (frontend builds if any)
+node_modules/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Terraform (never bake into image)
+terraform/
