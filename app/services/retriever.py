@@ -1,17 +1,21 @@
-import numpy as np
-from app.services.vector_store import VectorStore
 from app.services.embeddings import embed_texts
+from app.services.vector_store import VectorStore
 
-def retrieve_similar_chunks(question, top_k=3):
+
+def retrieve_similar_chunks(query: str, k: int = 5):
     store = VectorStore()
-    embeddings = embed_texts([question])
 
-    D, I = store.index.search(np.array(embeddings).astype("float32"), top_k)
+    # 1️⃣ Generate embedding for the query
+    embeddings = embed_texts([query])
+    if not embeddings:
+        return []
 
-    results = []
-    for idx in I[0]:
-        if idx < len(store.metadata):
-            results.append(store.metadata[idx])
+    query_embedding = embeddings[0]
+
+    # 2️⃣ Use VectorStore search (SAFE)
+    results = store.search(
+        query_embedding=query_embedding,
+        top_k=k
+    )
 
     return results
-

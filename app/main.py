@@ -1,48 +1,89 @@
 import os
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+from prometheus_client import Counter, Histogram, make_asgi_app
+
+from app.api.upload import router as upload_router
+from app.api.chat import router as chat_router
+from app.api.reindex import router as reindex_router
+from app.api.admin import router as admin_router
 
 from app.services.extractor import extract_text
 from app.services.chunker import chunk_text
 from app.services.embeddings import embed_texts
 from app.services.vector_store import VectorStore
 
-from app.api.upload import router as upload_router
-from app.api.chat import router as chat_router
-from app.api.reindex import router as reindex_router
 
-
+# ─────────────────────────────────────────────
+# Paths
+# ─────────────────────────────────────────────
 SEED_DIR = "app/knowledge/seed"
-VECTOR_INDEX = "app/knowledge/vector_store/index.faiss"
+VECTOR_DIR = "app/knowledge/vector_store"
+VECTOR_INDEX = f"{VECTOR_DIR}/index.faiss"
 
-# ✅ 1. Create app FIRST
+# ─────────────────────────────────────────────
+# Create FastAPI app
+# ─────────────────────────────────────────────
 app = FastAPI(
     title="Enterprise Knowledge Assistant",
     version="1.0.0"
 )
 
-# ✅ 2. Basic endpoints
+
+# ─────────────────────────────────────────────
+# Metrics endpoint
+# ─────────────────────────────────────────────
+metrics_app = make_asgi_app()
+app.mount("/metrics", metrics_app)
+
+
+# ─────────────────────────────────────────────
+# Static Web UI
+# ─────────────────────────────────────────────
+app.mount("/ui", StaticFiles(directory="web", html=True), name="web")
+
+@app.get("/")
+def user_ui():
+    return FileResponse("web/user.html")
+
+@app.get("/admin-ui")
+def admin_ui():
+    return FileResponse("web/admin.html")
+
+
+# ─────────────────────────────────────────────
+# Health
+# ─────────────────────────────────────────────
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
-# ✅ 3. Include routers AFTER app exists
-app.include_router(upload_router)
-app.include_router(chat_router)
-app.include_router(reindex_router)
 
-# ✅ 4. Startup bootstrap
+# ─────────────────────────────────────────────
+# API Routers
+# ─────────────────────────────────────────────
+app.include_router(chat_router)
+app.include_router(upload_router)
+app.include_router(reindex_router)
+app.include_router(admin_router)
+
+
+# ─────────────────────────────────────────────
+# Bootstrap knowledge base (ONE TIME)
+# ─────────────────────────────────────────────
 @app.on_event("startup")
 def bootstrap_knowledge_base():
+    os.makedirs(SEED_DIR, exist_ok=True)
+    os.makedirs(VECTOR_DIR, exist_ok=True)
+
     if os.path.exists(VECTOR_INDEX):
-        print("✅ Vector store already initialized. Skipping bootstrap.")
+        print("✅ Vector store already exists. Skipping bootstrap.")
         return
 
-    print("🚀 Bootstrapping knowledge base from repo docs...")
+    print("🚀 Bootstrapping knowledge base from seed docs...")
     store = VectorStore()
-
-    if not os.path.exists(SEED_DIR):
-        print(f"⚠️ Seed directory not found: {SEED_DIR}")
-        return
 
     for filename in os.listdir(SEED_DIR):
         file_path = os.path.join(SEED_DIR, filename)
@@ -56,11 +97,9 @@ def bootstrap_knowledge_base():
 
             chunks = chunk_text(text)
             embeddings = embed_texts(chunks)
+
             metadata = [
-                {
-                    "source": filename,
-                    "text": chunk
-                }
+                {"source": filename, "text": chunk}
                 for chunk in chunks
             ]
 

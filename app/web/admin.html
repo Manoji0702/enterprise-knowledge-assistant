@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin – Knowledge Assistant</title>
+  <style>
+    body {
+      background: radial-gradient(circle at top, #0f172a, #020617);
+      font-family: Arial, sans-serif;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .card {
+      width: 520px;
+      padding: 30px;
+      background: #020617;
+      border-radius: 12px;
+      box-shadow: 0 0 40px rgba(99,102,241,.3);
+      text-align: center;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .upload { background: #4f46e5; color: white; }
+    .reindex { background: #ef4444; color: white; }
+
+    #status { margin-top: 15px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Admin – Knowledge Assistant</h2>
+
+  <input type="file" id="fileInput"><br><br>
+
+  <button class="upload" type="button" onclick="upload()">Upload Document</button>
+  <button class="reindex" type="button" onclick="reindex()">Reindex Knowledge Base</button>
+
+  <div id="status"></div>
+</div>
+
+<script>
+  async function upload() {
+    console.log("Upload clicked");
+
+    const file = document.getElementById("fileInput").files[0];
+    if (!file) {
+      alert("Select a file first");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch(
+      window.location.origin + "/knowledge/upload",
+      { method: "POST", body: formData }
+    );
+
+    const data = await res.json();
+    document.getElementById("status").innerText =
+      res.ok ? "✅ Upload successful\n" + JSON.stringify(data, null, 2)
+             : "❌ Upload failed\n" + JSON.stringify(data, null, 2);
+  }
+
+  async function reindex() {
+    console.log("Reindex clicked");
+
+    const res = await fetch(
+      window.location.origin + "/admin/reindex",
+      { method: "POST" }
+    );
+
+    const data = await res.json();
+    document.getElementById("status").innerText =
+      res.ok ? "✅ Reindex done\n" + JSON.stringify(data, null, 2)
+             : "❌ Reindex failed\n" + JSON.stringify(data, null, 2);
+  }
+</script>
+
+</body>
+</html>
