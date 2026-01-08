@@ -2,10 +2,11 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_USER = 'manoj0207'
-        IMAGE_NAME  = 'enterprise-knowledge-assistant'
-        IMAGE_TAG   = "${BUILD_NUMBER}"
-        FULL_IMAGE  = "${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
+        DOCKER_USERNAME = 'manoj0207'
+        IMAGE_NAME      = 'enterprise-knowledge-assistant'
+        IMAGE_TAG       = "${BUILD_NUMBER}"
+        FULL_IMAGE      = "${DOCKER_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}"
+        LATEST_IMAGE    = "${DOCKER_USERNAME}/${IMAGE_NAME}:latest"
     }
 
     stages {
@@ -19,21 +20,24 @@ pipeline {
         stage('Docker Build') {
             steps {
                 bat """
-                docker build -t %FULL_IMAGE% .
+                docker build --no-cache -t %FULL_IMAGE% .
+                docker tag %FULL_IMAGE% %LATEST_IMAGE%
                 """
             }
         }
 
-        stage('Docker Push') {
+        stage('Docker Login & Push') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
+                    usernameVariable: 'DOCKERHUB_USER',
+                    passwordVariable: 'DOCKERHUB_PASS'
                 )]) {
                     bat """
-                    docker login -u %DOCKER_USER% -p %DOCKER_PASS%
+                    echo %DOCKERHUB_PASS% | docker login -u %DOCKERHUB_USER% --password-stdin
                     docker push %FULL_IMAGE%
+                    docker push %LATEST_IMAGE%
+                    docker logout
                     """
                 }
             }
